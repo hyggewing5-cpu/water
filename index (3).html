@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>จดมิเตอร์น้ำ</title>
+<meta name="apple-mobile-web-app-title" content="จดมิเตอร์น้ำ">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<!-- ถ้า JavaScript ไม่ทำงาน ให้เด้งไปหน้าจดมิเตอร์ -->
+<noscript><meta http-equiv="refresh" content="1;url=https://script.google.com/macros/s/AKfycby5DuF-Jqc8sJfmD8TtNxq4i0vb0S50InbVdMZzruaShQYfl82HceATfwA2o132kNzXUg/exec"></noscript>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#F3F6F9;color:#0B2A4A;font-family:'Noto Sans Thai',system-ui,sans-serif;text-align:center;padding:24px}
+  main{max-width:380px;width:100%}
+  h1{font-size:22px;margin:12px 0 4px}
+  p{margin:0 0 16px;color:#4A5F73;font-size:15px}
+  [hidden]{display:none!important}
+  a.btn,button.btn{display:block;width:100%;padding:16px;border-radius:14px;text-decoration:none;font:600 18px/1.2 inherit;font-family:inherit;margin-top:10px;border:0;cursor:pointer}
+  .main{background:#0A5C99;color:#fff}
+  .sec{background:#fff;color:#0B2A4A;border:2px solid #0B2A4A!important}
+  .box{background:#fff;border:1px solid #D3DDE6;border-radius:14px;padding:14px 16px;margin-top:18px;text-align:left;font-size:14px;line-height:1.7;color:#34495E}
+  .box b{color:#0B2A4A}
+  .link{background:none;border:0;color:#0A5C99;text-decoration:underline;font:inherit;font-size:14px;cursor:pointer;margin-top:14px;padding:6px}
+</style>
+</head>
+<body>
+<main>
+  <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#0A5C99" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>
+  <h1>ระบบบันทึกการใช้น้ำปะปา</h1>
+
+  <!-- ทางเข้าปกติ: เด้งไประบบทันที -->
+  <section id="jump" hidden><p>กำลังพาไปยังระบบ...</p></section>
+
+  <!-- กำลังเปิดอัตโนมัติ (เมื่อเคยกด "จดมิเตอร์" ไว้) -->
+  <section id="auto" hidden>
+    <p>กำลังเปิดหน้าจดมิเตอร์...</p>
+    <button class="link" id="cancel" type="button">แตะที่นี่เพื่อเลือกเมนูอื่น</button>
+  </section>
+
+  <!-- เมนู: ใช้หน้านี้เพิ่มทางลัดบนหน้าจอมือถือ -->
+  <section id="menu" hidden>
+    <p>เลือกเมนูที่ต้องการ</p>
+    <button class="btn main" id="rec" type="button">เปิดหน้าจดมิเตอร์</button>
+    <button class="btn sec" id="adm" type="button">หลังบ้าน (ผู้ดูแลระบบ)</button>
+    <div class="box">
+      <b>เพิ่มทางลัดบนหน้าจอมือถือ</b><br>
+      <b>Android (Chrome):</b> กดเมนู ⋮ &gt; เพิ่มลงในหน้าจอหลัก<br>
+      <b>iPhone (Safari):</b> กดปุ่มแชร์ &gt; เพิ่มไปยังหน้าจอโฮม<br>
+      ทำจากหน้านี้ (ลิงก์ที่ลงท้าย <b>?menu=1</b>) ทางลัดจะชี้มาที่หน้านี้เสมอ แม้ลิงก์ระบบเปลี่ยน<br>
+      กด "เปิดหน้าจดมิเตอร์" 1 ครั้ง ครั้งต่อไปเครื่องนี้จะเข้าหน้าจดมิเตอร์อัตโนมัติ
+    </div>
+    <button class="link" id="reset" type="button">ล้างค่าที่จำไว้ (กลับมาแสดงเมนูทุกครั้ง)</button>
+  </section>
+</main>
+<script>
+  // เปลี่ยนลิงก์ปลายทางตรงนี้ที่เดียว ถ้ามีการ Deploy ใหม่แล้วลิงก์ /exec เปลี่ยน
+  var EXEC = 'https://script.google.com/macros/s/AKfycby5DuF-Jqc8sJfmD8TtNxq4i0vb0S50InbVdMZzruaShQYfl82HceATfwA2o132kNzXUg/exec';
+  var $ = function (id) { return document.getElementById(id); };
+  var q = new URLSearchParams(location.search);
+  var go = function (admin) { location.replace(EXEC + (admin ? '?page=admin' : '')); };
+  var store = {
+    get: function () { try { return localStorage.getItem('wm_default'); } catch (e) { return null; } },
+    set: function (v) { try { localStorage.setItem('wm_default', v); } catch (e) {} },
+    del: function () { try { localStorage.removeItem('wm_default'); } catch (e) {} }
+  };
+
+  if (!q.has('menu')) {
+    // ทางเข้าปกติ: ส่งต่อไประบบ พร้อมพารามิเตอร์ เช่น ?page=admin
+    $('jump').hidden = false;
+    setTimeout(function () { location.replace(EXEC + (location.search || '')); }, 300);
+  } else {
+    $('rec').onclick = function () { store.set('rec'); go(false); };
+    $('adm').onclick = function () { go(true); };
+    $('reset').onclick = function () { store.del(); alert('ล้างค่าที่จำไว้แล้ว'); };
+    if (store.get() === 'rec' && !q.has('stay')) {
+      $('auto').hidden = false;
+      var t = setTimeout(function () { go(false); }, 1200);
+      $('cancel').onclick = function () { clearTimeout(t); $('auto').hidden = true; $('menu').hidden = false; };
+    } else {
+      $('menu').hidden = false;
+    }
+  }
+</script>
+</body>
+</html>
